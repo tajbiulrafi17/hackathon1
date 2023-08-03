@@ -45,9 +45,47 @@ app.get('/todos', async (req: Request, res: Response) => {
 
 // get a todo
 
+app.get('/todos/:id', async (req, res) => {
+    const { id } = req.params;
+    const todo = await prisma.todo.findMany({
+        where: {
+            id: parseInt(id),
+        }
+    });
+    res.json({ todo });
+
+})
+
 // update a todo
 
+app.put('/todos/:id', async (req, res) => {
+    const { id } = req.params;
+    const { description } = req.body;
+    const todo = await prisma.todo.update({
+        where: {
+            id: parseInt(id),
+        },
+        data: {
+            description: description,
+        }
+    });
+
+    res.json({ todo });
+
+})
+
 //delete a todo
+
+app.delete('/todos/:id', async (req, res) => {
+    const { id } = req.params;
+    const todo = await prisma.todo.delete({
+        where: {
+            id: parseInt(id),
+        }
+    })
+
+    res.send("Item deleted");
+})
 
 
 app.get('/hi', (req, res) => {
