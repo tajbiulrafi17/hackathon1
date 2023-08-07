@@ -1,5 +1,6 @@
 import express, { Request, Response, NextFunction, ErrorRequestHandler } from 'express'
 import { PrismaClient } from '@prisma/client'
+import cors from 'cors';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -12,6 +13,7 @@ const logger = (req: Request, res: Response, next: NextFunction) => {
 
 
 //middleware
+app.use(cors());
 app.use(express.json()); //req.body
 
 app.use(logger);
@@ -31,7 +33,7 @@ app.post("/todo/add", async (req: Request, res: Response) => {
         }
     });
 
-    res.json({ todo });
+    res.json(todo);
 
 })
 
@@ -40,7 +42,7 @@ app.post("/todo/add", async (req: Request, res: Response) => {
 app.get('/todos', async (req: Request, res: Response) => {
     const todo = await prisma.todo.findMany();
 
-    res.json({ todo });
+    res.json(todo);
 })
 
 // get a todo
@@ -52,7 +54,7 @@ app.get('/todos/:id', async (req, res) => {
             id: parseInt(id),
         }
     });
-    res.json({ todo });
+    res.json(todo);
 
 })
 
@@ -70,7 +72,7 @@ app.put('/todos/:id', async (req, res) => {
         }
     });
 
-    res.json({ todo });
+    res.json(todo);
 
 })
 
