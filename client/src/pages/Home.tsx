@@ -25,38 +25,73 @@ import {
 import { EditIcon, DeleteIcon } from '@chakra-ui/icons';
 import axios from 'axios';
 
+
 interface Todo {
     id: number;
     description: string;
+    user: number;
 }
 
-function Home() {
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    password: string;
+}
+interface SignupProps {
+    setAuth: (boolean: boolean) => void; // Assuming setAuth is a function that takes a boolean parameter and returns void
+}
+
+function Home({ setAuth }: SignupProps) {
     const [todos, setTodos] = useState<Todo[]>([]);
+    const [user, setUser] = useState<User[]>();
+
     const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null); // State for handling the selected todo for editing
     const [isModalOpen, setIsModalOpen] = useState(false); // State to control the modal open/close
 
-
+    useEffect(() => {
+        getName();
+    }, []);
 
     useEffect(() => {
         getTodos();
     }, []);
 
-    // const getTodos = async () => {
-    //     try {
-    //         const response = await fetch("http://localhost:8000/todos")
-    //         const jsonData = await response.json();
-    //         console.log(jsonData);
-    //         setTodos(jsonData);
-    //     } catch (error) {
-    //         console.error(error);
-    //     }
-    // }
+    const getName = async () => {
+        // try {
+        //     try {
+        //         const token = localStorage.getItem('token');
+        //         // console.log(token);
+        //         const response = await axios.get<User[]>('http://localhost:8000/todos', {
+        //             headers: { token: token }
+        //         });
+        //         console.log(response.data);
+
+        //     } catch (error) {
+        //         console.error(error);
+        //     }
+        // } catch (error) {
+        //     console.error(error);
+        // }
+    };
 
     const getTodos = async () => {
         try {
-            const response = await axios.get<Todo[]>('http://localhost:8000/todos');
+            const token = localStorage.getItem('token');
+            // console.log(token);
+            const response = await axios.get<{ todo: Todo[], user: User[] }>('http://localhost:8000/todos', {
+                headers: { token: token }
+            });
+            const { todo, user } = response.data;
+
             console.log(response.data);
-            setTodos(response.data);
+            console.log('Todos:', todo);
+            console.log('User:', user);
+            console.log(user[0].name);
+
+            setTodos(todo);
+            setUser(user);
+
         } catch (error) {
             console.error(error);
         }
@@ -104,12 +139,27 @@ function Home() {
         }
     };
 
+    const logout = (e: React.FormEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        localStorage.removeItem("token");
+        setAuth(false);
+    }
+
+
 
     return (
         <>
             <Flex w='100%' h='100vh'>
                 <Flex w='100%' flexDir='column' ml='20%' mt='5%' mr='20%' color='black'>
-                    <Text fontWeight='700' fontSize='30'>Todo</Text>
+
+                    <Flex>
+                        <Text fontWeight='700' fontSize='30'>{user ? user[0].name : "No Name"}</Text>
+                        <Link href='' ml='auto'>
+                            <Button ml={5} bg={'red.400'} onClick={e => logout(e)}>Signout</Button>
+                        </Link>
+                    </Flex>
+
+                    <Text fontWeight='700' fontSize='30' mt='5%'>Todo List</Text>
                     <Flex mt='5%'>
 
                         <Link href='http://localhost:3000/add' >
