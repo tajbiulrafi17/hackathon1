@@ -20,82 +20,83 @@ import {
     ModalBody,
     ModalFooter,
     ModalCloseButton,
-    Link
+
 } from '@chakra-ui/react';
 import { EditIcon, DeleteIcon } from '@chakra-ui/icons';
 import axios from 'axios';
+import { useGetTodosQuery, useGetTodoQuery, useUpdateTodoMutation, useDeleteTodoMutation } from '../api';
 
-
-interface Todo {
-    id: number;
-    description: string;
-    user: number;
-}
-
-interface User {
-    id: number;
-    name: string;
-    email: string;
-    password: string;
-}
+import { Todo, User } from '../api/type'
+import { Link, useNavigate } from 'react-router-dom';
 interface SignupProps {
     setAuth: (boolean: boolean) => void; // Assuming setAuth is a function that takes a boolean parameter and returns void
 }
 
 function Home({ setAuth }: SignupProps) {
+
     const [todos, setTodos] = useState<Todo[]>([]);
     const [user, setUser] = useState<User[]>();
 
     const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null); // State for handling the selected todo for editing
     const [isModalOpen, setIsModalOpen] = useState(false); // State to control the modal open/close
 
-    useEffect(() => {
-        getName();
-    }, []);
+    const [updateTodoMutation] = useUpdateTodoMutation();
+    const [deleteTodoMutation] = useDeleteTodoMutation();
+    // useEffect(() => {
+    //     getTodos();
+    // }, []);
+
+    const {
+        data,
+        error,
+        isLoading,
+        isFetching,
+        isSuccess
+    } = useGetTodosQuery({});
 
     useEffect(() => {
-        getTodos();
-    }, []);
-
-    const getName = async () => {
-        // try {
-        //     try {
-        //         const token = localStorage.getItem('token');
-        //         // console.log(token);
-        //         const response = await axios.get<User[]>('http://localhost:8000/todos', {
-        //             headers: { token: token }
-        //         });
-        //         console.log(response.data);
-
-        //     } catch (error) {
-        //         console.error(error);
-        //     }
-        // } catch (error) {
-        //     console.error(error);
-        // }
-    };
-
-    const getTodos = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            // console.log(token);
-            const response = await axios.get<{ todo: Todo[], user: User[] }>('http://localhost:8000/todos', {
-                headers: { token: token }
-            });
-            const { todo, user } = response.data;
-
-            console.log(response.data);
-            console.log('Todos:', todo);
-            console.log('User:', user);
-            console.log(user[0].name);
-
-            setTodos(todo);
-            setUser(user);
-
-        } catch (error) {
-            console.error(error);
+        if (isSuccess && data) {
+            console.log(data.todo ?? []);
+            console.log(data.user ?? []);
+            setTodos(data.todo);
+            setUser(data.user);
         }
-    };
+    }, [isSuccess, data]);
+
+    let content;
+
+    if (isLoading) {
+        content = <p>Loading...</p>;
+    } else if (isFetching) {
+        content = <p>Fetching...</p>
+    } else if (error) {
+        content = <p>Something went wrong</p>
+    }
+
+
+    // const getTodos = async () => {
+    //     try {
+    //         const token = localStorage.getItem('token');
+    //         // console.log(token);
+    //         const response = await axios.get<{ todo: Todo[], user: User[] }>('http://localhost:8000/todos', {
+    //             headers: { token: token }
+    //         });
+    //         const { todo, user } = response.data;
+
+    //         console.log(response.data);
+    //         console.log('Todos:', todo);
+    //         console.log('User:', user);
+    //         console.log(user[0].name);
+
+    //         // ------------------------------------- 
+
+    //         setTodos(todo);
+    //         setUser(user);
+
+    //     } catch (error) {
+    //         console.error(error);
+    //     }
+    // };
 
     // Function to handle opening the edit modal
     const openEditModal = (todo: Todo) => {
@@ -109,17 +110,26 @@ function Home({ setAuth }: SignupProps) {
         setIsModalOpen(false);
     }
 
+    const navigate = useNavigate();
+
     const updateTodo = async () => {
         try {
             if (selectedTodo) {
-                const response = await axios.put<Todo>(
-                    `http://localhost:8000/todos/${selectedTodo.id}`,
-                    { description: selectedTodo.description }
-                );
-                console.log('Updated todo:', response.data);
+                // const response = await axios.put<Todo>(
+                //     `http://localhost:8000/todos/${selectedTodo.id}`,
+                //     { description: selectedTodo.description }
+                // );
+                // console.log('Updated todo:', response.data);
+                // closeEditModal();
+                // window.location.assign('/');
+                // -----------------------------------
+                await updateTodoMutation({
+                    id: selectedTodo.id,
+                    description: selectedTodo.description
+                });
 
                 closeEditModal();
-                window.location.assign('/');
+                navigate('/');
             }
         } catch (error) {
             console.error(error);
@@ -128,12 +138,15 @@ function Home({ setAuth }: SignupProps) {
 
     const deleteTodo = async (id: number) => {
         try {
-            await axios.delete(`http://localhost:8000/todos/${id}`);
-            console.log('Deleted todo with ID:', id);
-
-            // You can update the todos state to remove the deleted todo from the UI
+            // await axios.delete(`http://localhost:8000/todos/${id}`);
+            // console.log('Deleted todo with ID:', id);
+            // // You can update the todos state to remove the deleted todo from the UI
+            // setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== id));
+            // // window.location.assign('/');
+            // ---------------------------------
+            await deleteTodoMutation(id);
             setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== id));
-            // window.location.assign('/');
+
         } catch (error) {
             console.error(error);
         }
@@ -149,22 +162,25 @@ function Home({ setAuth }: SignupProps) {
 
     return (
         <>
+            <Flex>
+                {content}
+            </Flex>
             <Flex w='100%' h='100vh'>
                 <Flex w='100%' flexDir='column' ml='20%' mt='5%' mr='20%' color='black'>
 
                     <Flex>
                         <Text fontWeight='700' fontSize='30'>{user ? user[0].name : "No Name"}</Text>
-                        <Link href='' ml='auto'>
-                            <Button ml={5} bg={'red.400'} onClick={e => logout(e)}>Signout</Button>
-                        </Link>
+
+                        <Button ml={5} bg={'red.400'} onClick={e => logout(e)}>Signout</Button>
+
                     </Flex>
 
                     <Text fontWeight='700' fontSize='30' mt='5%'>Todo List</Text>
                     <Flex mt='5%'>
 
-                        <Link href='http://localhost:3000/add' >
-                            <Button ml={5} bg={'blue.400'} >Add New Todo</Button>
-                        </Link>
+
+                        <Button as={Link} to='/add' ml={5} bg={'blue.400'} >Add New Todo</Button>
+
 
                     </Flex>
 
@@ -181,6 +197,7 @@ function Home({ setAuth }: SignupProps) {
                                     todos.map(todo => (
                                         <Box key={todo.id} borderWidth='1px' p={4} mb={2}>
                                             <Heading fontSize='lg' mb={2}>{todo.description}</Heading>
+                                            <span><TodoDetail id={todo.id} /></span>
                                             <Flex gap='2'>
                                                 <IconButton
                                                     aria-label="Edit Todo"
@@ -238,5 +255,11 @@ function Home({ setAuth }: SignupProps) {
 };
 
 
+export const TodoDetail = ({ id }: { id: number }) => {
+    const { data } = useGetTodoQuery(id);
+    return (
+        <pre>{JSON.stringify(data, undefined)}</pre>
+    )
+}
 
 export default Home;

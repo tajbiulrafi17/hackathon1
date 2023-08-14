@@ -16,7 +16,12 @@ const logger = (req: Request, res: Response, next: NextFunction) => {
 
 
 //middleware
-app.use(cors());
+app.use(
+    cors({
+        origin: ["http://localhost:3000"],
+        credentials: true
+    })
+)
 app.use(express.json()); //req.body
 app.use(logger);
 

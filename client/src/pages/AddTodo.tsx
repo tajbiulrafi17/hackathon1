@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Flex, Text, Input, Button } from '@chakra-ui/react';
 import axios from 'axios';
 
+import { useAddTodoMutation } from '../api';
+
 interface SignupProps {
     setAuth: (boolean: boolean) => void; // Assuming setAuth is a function that takes a boolean parameter and returns void
 }
@@ -9,19 +11,26 @@ interface SignupProps {
 function AddTodo({ setAuth }: SignupProps) {
 
     const [newTodo, setNewTodo] = useState('');
+    const [addTodoMutation] = useAddTodoMutation();
 
     const onSubmitForm = async (e: React.MouseEvent<HTMLButtonElement>) => {
 
         e.preventDefault();
         try {
-            const body = { description: newTodo };
-            const token = localStorage.getItem('token');
-            const response = await axios.post('http://localhost:8000/todos/add', body, {
-                headers: { token: token }
-            });
+            // const body = { description: newTodo };
+            // const token = localStorage.getItem('token');
+            // const response = await axios.post('http://localhost:8000/todos', body, {
+            //     headers: { token: token }
+            // });
+            // console.log(response);
+            // window.location.assign('/');
 
+            // --------------------------------------
+
+            const response = await addTodoMutation(newTodo);
             console.log(response);
-            window.location.assign('/');
+            window.location.assign('/'); // Redirect if needed
+
 
 
         } catch (error) {

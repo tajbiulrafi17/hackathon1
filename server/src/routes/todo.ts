@@ -8,6 +8,7 @@ const authorization = require('../middleware/authorization');
 
 // get all todo
 
+
 router.get('/', authorization, async (req: Request, res: Response) => {
     const user_id = req.params;
     // console.log(user_id);
@@ -27,7 +28,7 @@ router.get('/', authorization, async (req: Request, res: Response) => {
 
 // create a todo
 
-router.post("/add", authorization, async (req: Request, res: Response) => {
+router.post("/", authorization, async (req: Request, res: Response) => {
     const user_id = req.body.user;
     const desc = req.body.description;
     // const id = req.body.id;
